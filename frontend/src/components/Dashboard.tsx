@@ -32,11 +32,11 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="flex w-full h-full">
-      <div className="w-[240px] border-r border-gray-200 dark:border-white/5">
+    <div className="flex w-full h-full min-h-0 max-h-full overflow-hidden">
+      <div className="w-[240px] h-full border-r border-gray-200 dark:border-white/5 flex-shrink-0">
         <Sidebar />
       </div>
-      <div className="flex-1 flex flex-col px-8 py-7 gap-12">
+      <div className="flex-1 h-full flex flex-col px-8 py-7 gap-12 min-w-0 min-h-0 overflow-hidden">
         <Header pagePath={location.pathname} />
         <div className="mb-2">
           <form className="flex items-center gap-2" onSubmit={handleSearchSubmit}>
@@ -59,8 +59,10 @@ export const Dashboard = () => {
             </button>
           </form>
         </div>
-        <AnalyticsRow activeTeam={activeTeam} />
-        <BottomRow searchQuery={currentSearchQuery} activeTeam={activeTeam} />
+        <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-12">
+          <AnalyticsRow activeTeam={activeTeam} />
+          <BottomRow searchQuery={currentSearchQuery} activeTeam={activeTeam} />
+        </div>
       </div>
     </div>
   )

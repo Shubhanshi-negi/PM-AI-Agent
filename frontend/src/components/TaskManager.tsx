@@ -83,8 +83,8 @@ export const TaskManager = ({ searchQuery = '', activeTeam }: TaskManagerProps) 
   const tasksByStatus = (status: string) => tasks.filter(t => t.status === status)
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-3">
+    <div className="flex flex-col h-full min-h-0 max-h-full overflow-hidden">
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div>
           <div className="text-[11px] text-muted mb-1">Task Manager</div>
           <div className="text-[17px] font-semibold">
@@ -94,7 +94,9 @@ export const TaskManager = ({ searchQuery = '', activeTeam }: TaskManagerProps) 
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="h-8 px-3 rounded-lg bg-primary text-[11px] flex items-center gap-1 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50 active:scale-95 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-8 px-3 rounded-lg bg-primary text-[11px] flex items-center gap-1 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed z-30 relative pointer-events-auto"
+            tabIndex={0}
+            style={{ position: 'relative' }}
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Task</span>
@@ -107,7 +109,9 @@ export const TaskManager = ({ searchQuery = '', activeTeam }: TaskManagerProps) 
               }
             }}
             disabled={tasks.length === 0}
-            className="h-8 px-3 rounded-lg bg-white/5 text-[11px] flex items-center gap-1 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50 active:scale-95 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-8 px-3 rounded-lg bg-white/5 text-[11px] flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed z-30 relative pointer-events-auto"
+            tabIndex={0}
+            style={{ position: 'relative' }}
           >
             <span>Edit Task</span>
           </button>
@@ -119,15 +123,15 @@ export const TaskManager = ({ searchQuery = '', activeTeam }: TaskManagerProps) 
           Loading tasks...
         </div>
       ) : (
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 grid grid-cols-3 gap-3">
+        <div className="flex-1 min-h-0 flex overflow-hidden">
+          <div className="flex-1 grid grid-cols-3 gap-3 min-h-0 overflow-auto">
             {columns.map((statusColumn) => (
-              <div key={statusColumn} className="space-y-3">
+              <div key={statusColumn} className="space-y-3 min-h-0">
                 <div className="text-[10px] uppercase tracking-wider text-muted mb-2 px-1">
                   {statusColumn} ({tasksByStatus(statusColumn).length})
                 </div>
                 {tasksByStatus(statusColumn).length === 0 && (
-                     <div className="text-center text-muted text-xs italic">No tasks here</div>
+                  <div className="text-center text-muted text-xs italic">No tasks here</div>
                 )}
                 {tasksByStatus(statusColumn).map((task) => (
                   <TaskCard
@@ -151,16 +155,20 @@ export const TaskManager = ({ searchQuery = '', activeTeam }: TaskManagerProps) 
 
 
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Create New Task"
-      >
-        <AddTaskForm 
-          onSuccess={handleTaskAdded} 
-          onCancel={() => setIsModalOpen(false)} 
-        />
-      </Modal>
+      {isModalOpen && (
+        <div id="add-task-modal-root">
+          <Modal 
+            isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)} 
+            title="Create New Task"
+          >
+            <AddTaskForm 
+              onSuccess={handleTaskAdded} 
+              onCancel={() => setIsModalOpen(false)} 
+            />
+          </Modal>
+        </div>
+      )}
 
       {selectedTask && (
         <EditTaskModal

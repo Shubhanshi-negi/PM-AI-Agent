@@ -19,15 +19,8 @@ export const Inbox = ({ searchQuery, activeTeam }: InboxProps) => {
         setLoading(true);
         // Pass searchQuery to the API call
         const response = await inboxService.getMessages(searchQuery);
-        let currentMessages: InboxMessage[] = [];
-
-        // Handle both response formats
-        if (Array.isArray(response.data)) {
-            currentMessages = response.data;
-        } else if (response.data && (response.data as any).items) {
-            currentMessages = (response.data as any).items;
-            setIsConnected((response.data as any).connected);
-        }
+        let currentMessages: InboxMessage[] = response.data.items;
+        setIsConnected(response.data.connected);
 
         if (activeTeam) {
             currentMessages = currentMessages.filter((m: InboxMessage) => 
@@ -48,7 +41,7 @@ export const Inbox = ({ searchQuery, activeTeam }: InboxProps) => {
   }, [searchQuery, activeTeam]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 max-h-full overflow-hidden">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-3">
         <div>
@@ -67,7 +60,7 @@ export const Inbox = ({ searchQuery, activeTeam }: InboxProps) => {
       </div>
 
       {/* MESSAGE LIST */}
-      <div className="flex-1 space-y-3 overflow-auto">
+      <div className="flex-1 min-h-0 max-h-full space-y-3 overflow-auto">
         {loading ? (
           <div className="text-center py-8 text-muted text-sm animate-pulse">
             Loading messages...

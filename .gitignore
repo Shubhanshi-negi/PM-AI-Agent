@@ -12,6 +12,8 @@ yarn.lock
 dist/
 build/
 coverage/
+backend/data/
+backend/uploads/
 
 # System Files
 .DS_Store

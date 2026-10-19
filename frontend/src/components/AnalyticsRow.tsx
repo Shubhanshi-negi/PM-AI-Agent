@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, BarChart, Bar, Tooltip } from 'recharts'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useProject } from '../context/ProjectContext'
 import { analyticsService, type Analytics } from '../services/api'
 
@@ -12,7 +12,7 @@ export const AnalyticsRow = ({ activeTeam }: AnalyticsRowProps) => {
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true)
     try {
       const response = await analyticsService.getProjectAnalytics(currentProject?._id, activeTeam)
@@ -23,11 +23,11 @@ export const AnalyticsRow = ({ activeTeam }: AnalyticsRowProps) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentProject, activeTeam])
 
   useEffect(() => {
-    fetchAnalytics()
-  }, [currentProject, activeTeam])
+    void fetchAnalytics()
+  }, [fetchAnalytics])
 
   const donutData = analytics ? [
     { name: 'To Do', value: analytics.statusBreakdown.todo, color: '#6366F1' },
@@ -60,8 +60,8 @@ export const AnalyticsRow = ({ activeTeam }: AnalyticsRowProps) => {
   }
 
   return (
-    <div className="flex gap-6 h-[210px] shrink-0">
-      <div className="flex-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] px-5 py-4 flex">
+    <div className="flex gap-6 h-[210px] shrink-0 mb-10 w-full min-w-0 overflow-x-auto">
+      <div className="flex-1 min-w-0 rounded-2xl bg-white/[0.03] border border-white/[0.06] px-5 py-4 flex overflow-hidden">
         <div className="flex flex-col justify-between w-[55%]">
           <div>
             <div className="text-[11px] text-muted mb-1">Status Overview</div>
@@ -106,7 +106,7 @@ export const AnalyticsRow = ({ activeTeam }: AnalyticsRowProps) => {
         </div>
       </div>
 
-      <div className="flex-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] px-5 py-4 flex flex-col">
+      <div className="flex-1 min-w-0 rounded-2xl bg-white/[0.03] border border-white/[0.06] px-5 py-4 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-2">
           <div>
             <div className="text-[11px] text-muted mb-1">Completion Rate</div>
@@ -150,7 +150,7 @@ export const AnalyticsRow = ({ activeTeam }: AnalyticsRowProps) => {
         </div>
       </div>
 
-      <div className="flex-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] px-5 py-4 flex flex-col">
+      <div className="flex-1 min-w-0 rounded-2xl bg-white/[0.03] border border-white/[0.06] px-5 py-4 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-2">
           <div>
             <div className="text-[11px] text-muted mb-1">Priority Breakdown</div>

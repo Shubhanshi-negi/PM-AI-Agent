@@ -1,4 +1,3 @@
-import { type IProject } from '../models/Project.js';
 import { type ITask } from '../models/Task.js';
 
 export interface AnalyticsResult {
@@ -19,7 +18,7 @@ export interface AnalyticsResult {
     blockedCount: number;
 }
 
-export const calculateProjectAnalytics = (project: IProject, tasks: ITask[]): AnalyticsResult => {
+export const calculateProjectAnalytics = (tasks: ITask[]): AnalyticsResult => {
     const totalTasks = tasks.length;
     if (totalTasks === 0) {
         return {
@@ -34,6 +33,7 @@ export const calculateProjectAnalytics = (project: IProject, tasks: ITask[]): An
     }
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const stats: AnalyticsResult = {
         totalTasks,
         completedTasks: 0,
@@ -66,10 +66,9 @@ export const calculateProjectAnalytics = (project: IProject, tasks: ITask[]): An
         }
 
         // Blocked Check
-        // Task dependsOn is an ObjectId, we need to find the actual task object
         if (task.dependsOn) {
-            const dependencyTask = tasks.find(t => t._id.toString() === task.dependsOn?.toString());
-            if (dependencyTask && dependencyTask.status !== 'Done') {
+            const dependencyStatus = tasks.find(candidate => candidate._id === task.dependsOn)?.status;
+            if (dependencyStatus && dependencyStatus !== 'Done') {
                 stats.blockedCount++;
             }
         }

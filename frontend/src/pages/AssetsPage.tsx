@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Upload, X, File } from 'lucide-react'
 import { useProject } from "../context/ProjectContext";
 import { ChatWidget } from "../components/ChatWidget";
-import { projectService } from "../services/api";
+import { projectService, type ProjectAsset } from "../services/api";
 
 interface UploadedFile {
   id: string
@@ -13,7 +13,7 @@ interface UploadedFile {
 }
 
 export const AssetsPage = () => {
-  const { currentProject } = useProject();
+  const { currentProject, refreshProjects } = useProject();
   const projectId = currentProject?._id ?? "";
   
   const [files, setFiles] = useState<UploadedFile[]>([])
@@ -22,8 +22,8 @@ export const AssetsPage = () => {
 
   useEffect(() => {
     if (currentProject?.assets) {
-      setFiles(currentProject.assets.map((asset: any) => ({
-        id: asset._id || Math.random().toString(36).substr(2, 9),
+      setFiles(currentProject.assets.map((asset: ProjectAsset) => ({
+        id: asset._id,
         name: asset.name,
         size: asset.size,
         type: asset.type,
@@ -69,35 +69,33 @@ export const AssetsPage = () => {
     }
 
     setIsUploading(true);
-    
+    let uploaded = false;
     try {
-      const newFiles: UploadedFile[] = [];
-      
-      // Upload files sequentially (could be parallelized)
       for (const file of droppedFiles) {
         await projectService.uploadFile(projectId, file);
-        // Assuming the backend returns the full updated list or we construct it
-        // Ideally, backend returns the metadata of the uploaded file
-        newFiles.push({
-          id: Math.random().toString(36).substr(2, 9), // Temp ID until refresh
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          uploadedAt: new Date()
-        });
+        uploaded = true;
       }
-      
-      setFiles(prev => [...prev, ...newFiles]);
     } catch (error) {
       console.error("Upload failed", error);
       alert("Failed to upload files.");
     } finally {
+      if (uploaded) await refreshProjects();
       setIsUploading(false);
     }
   }
 
-  const handleRemoveFile = (id: string) => {
-    setFiles(files.filter(file => file.id !== id))
+  const handleRemoveFile = async (id: string) => {
+    if (!projectId) return;
+    setIsUploading(true);
+    try {
+      await projectService.deleteAsset(projectId, id);
+      await refreshProjects();
+    } catch (error) {
+      console.error("Asset removal failed", error);
+      alert("Failed to remove file.");
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   const formatFileSize = (bytes: number) => {
@@ -121,7 +119,7 @@ export const AssetsPage = () => {
   return (
     <div className="flex gap-6 h-full">
       {/* Left Column: Context Manager */}
-      <div className="flex-1 flex flex-col gap-6 overflow-y-auto">
+      <div className="flex-1 flex flex-col gap-6 overflow-y-auto custom-scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div>
           <h1 className="text-[26px] leading-7 font-semibold mb-2">Project Intelligence</h1>
           <p className="text-muted text-sm">Upload documents to give the AI context about your project.</p>
@@ -156,6 +154,7 @@ export const AssetsPage = () => {
               <input
                 type="file"
                 multiple
+                accept=".pdf,.txt,.md,.markdown"
                 onChange={handleFileInputChange}
                 disabled={isUploading}
                 className="hidden"
@@ -201,6 +200,7 @@ export const AssetsPage = () => {
                   </div>
                   <button
                     onClick={() => handleRemoveFile(file.id)}
+                    disabled={isUploading}
                     className="flex-shrink-0 ml-2 p-2 rounded-lg hover:bg-red-500/20 text-muted hover:text-red-400 transition-all duration-200 opacity-0 group-hover:opacity-100"
                     title="Remove file"
                   >

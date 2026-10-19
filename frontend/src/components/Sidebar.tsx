@@ -23,7 +23,7 @@ export const Sidebar = ({ activeTeam, onTeamChange }: SidebarProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full px-5 py-6 text-xs text-muted">
+    <div className="flex flex-col h-full min-h-0 max-h-full px-5 py-6 text-xs text-muted overflow-hidden">
       <div className="relative mb-6">
         <div 
           className="flex items-center justify-between cursor-pointer group"
@@ -81,7 +81,7 @@ export const Sidebar = ({ activeTeam, onTeamChange }: SidebarProps) => {
       </div>
 
       {/* Main Menu */}
-      <div className="flex-1 overflow-hidden flex flex-col gap-5">
+      <div className="flex-1 min-h-0 max-h-full overflow-y-auto overflow-x-hidden flex flex-col gap-5 custom-scrollbar-hide">
         <div className="space-y-1">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted mb-1.5">Main Menu</div>
           <SidebarItem icon={<Home className="w-3.5 h-3.5" />} label="Dashboard" to="/dashboard" pathname={location.pathname} />

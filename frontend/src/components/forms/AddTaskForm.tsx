@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProject } from '../../context/ProjectContext';
-import { taskService, type Task } from '../../services/api';
+import { getApiErrorMessage, taskService, type Task, type TaskPriority, type TaskStatus, type TaskTeam } from '../../services/api';
 import { StatusBadge, PriorityBadge } from '../ui/BadgeComponents';
 
 interface AddTaskFormProps {
@@ -50,16 +50,16 @@ export const AddTaskForm = ({ onSuccess, onCancel }: AddTaskFormProps) => {
       await taskService.create({
         ...formData,
         project: currentProject?._id,
-        team: formData.team as any,
-        status: formData.status as 'To Do' | 'In Progress' | 'Done',
-        priority: formData.priority as 'Low' | 'Medium' | 'High',
-        dependsOn: formData.dependsOn || undefined
+        team: formData.team as TaskTeam,
+        status: formData.status as TaskStatus,
+        priority: formData.priority as TaskPriority,
+        dependsOn: formData.dependsOn || null
       });
       triggerTaskRefresh(); // Trigger task refresh across the app
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create task:', err);
-      setError(err.response?.data?.message || 'Failed to create task. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to create task. Please try again.'));
     } finally {
       setLoading(false);
     }

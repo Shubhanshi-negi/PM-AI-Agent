@@ -236,7 +236,7 @@ export async function chatOverProject(
 
     return text;
   } catch (err: any) {
-    return "I'm sorry, the AI is currently unavailable. Please try again later.";
+    throw new Error(err.message || 'AI service unavailable');
   }
 }
 

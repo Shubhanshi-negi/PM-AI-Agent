@@ -6,9 +6,9 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "tsx src/server.ts",
-    "build": "tsc",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc",
     "serve": "node dist/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsx --test src/services/analyticsService.test.ts src/services/jsonStore.test.ts src/server.test.ts"
   },
   "keywords": [],
   "dependencies": {
@@ -20,7 +20,6 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "mongoose": "^9.0.2",
     "multer": "^2.0.2",
     "pdf-parse": "^2.4.5"
   },

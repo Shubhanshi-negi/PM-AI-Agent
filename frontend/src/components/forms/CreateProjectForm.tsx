@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { projectService } from '../../services/api';
-import { useProject } from '../../context/ProjectContext'; // Ensure this path is correct
+import { getApiErrorMessage, projectService } from '../../services/api';
+import { useProject } from '../../context/ProjectContext';
 
 interface CreateProjectFormProps {
   onSuccess: () => void;
@@ -9,7 +9,7 @@ interface CreateProjectFormProps {
 }
 
 export const CreateProjectForm = ({ onSuccess, onCancel }: CreateProjectFormProps) => {
-  const { setCurrentProject } = useProject();
+  const { addProject } = useProject();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,14 +29,13 @@ export const CreateProjectForm = ({ onSuccess, onCancel }: CreateProjectFormProp
       const response = await projectService.create(formData);
       const created = response.data;
       // Set current project immediately
-      setCurrentProject(created);
+      addProject(created);
       onSuccess();
       // Close modal and navigate to dashboard
       navigate('/dashboard');
-    } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error?.message || 'Failed to create project';
+    } catch (error: unknown) {
       console.error('Failed to create project:', error);
-      setError(errorMsg);
+      setError(getApiErrorMessage(error, 'Failed to create project'));
     } finally {
       setLoading(false);
     }

@@ -5,7 +5,15 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000,
 });
+
+export const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  if (axios.isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message || error.message || fallback;
+  }
+  return error instanceof Error ? error.message : fallback;
+};
 
 // --- INTERFACES (matching backend models) ---
 
@@ -18,13 +26,31 @@ export interface Project {
   description?: string;
   image?: string;
   context?: string;
-  assets?: {
-    _id: string;
-    name: string;
-    type: string;
-    size: number;
-    uploadedAt: string;
-  }[];
+  assets?: ProjectAsset[];
+}
+
+export interface ProjectAsset {
+  _id: string;
+  name: string;
+  type: string;
+  size: number;
+  uploadedAt: string;
+}
+
+export type TaskTeam = 'Marketing' | 'Development' | 'Design' | 'Product' | 'Operations';
+export type TaskStatus = 'To Do' | 'In Progress' | 'Done';
+export type TaskPriority = 'Low' | 'Medium' | 'High';
+
+export interface TaskInput {
+  project?: string;
+  name: string;
+  owner: string;
+  team?: TaskTeam;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  dueDate: string;
+  description?: string;
+  dependsOn?: string | null;
 }
 
 export interface Task {
@@ -32,9 +58,9 @@ export interface Task {
   project?: string;
   name: string;
   owner: string;
-  team?: 'Marketing' | 'Development' | 'Design' | 'Product' | 'Operations';
-  status: 'To Do' | 'In Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
+  team?: TaskTeam;
+  status: TaskStatus;
+  priority: TaskPriority;
   dueDate: string;
   description?: string;
   dependsOn?: {
@@ -105,20 +131,22 @@ export const projectService = {
   uploadFile: (projectId: string, file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post<{ message: string; assets: any[] }>(`/api/upload/${projectId}`, formData, {
+    return api.post<{ message: string; assets: ProjectAsset[] }>(`/api/upload/${projectId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
+  deleteAsset: (projectId: string, assetId: string) =>
+    api.delete<{ message: string; assets: ProjectAsset[] }>(`/api/upload/${projectId}/${assetId}`),
 };
 
 export const taskService = {
   getByProject: (projectId?: string, searchQuery?: string) => {
     return api.get<Task[]>(`/api/tasks`, { params: { projectId, searchQuery } });
   },
-  create: (data: Omit<Task, '_id' | 'createdAt' | 'dependsOn'> & { dependsOn?: string }) => api.post<Task>('/api/tasks', data),
-  update: (id: string, data: Partial<Omit<Task, '_id' | 'createdAt'>>) => api.patch<Task>(`/api/tasks/${id}`, data),
+  create: (data: TaskInput) => api.post<Task>('/api/tasks', data),
+  update: (id: string, data: Partial<TaskInput>) => api.patch<Task>(`/api/tasks/${id}`, data),
   remove: (id: string) => api.delete(`/api/tasks/${id}`),
 };
 
@@ -138,9 +166,9 @@ export const inboxService = {
   // Tries to get messages. If Slack is set up, it hits /inbox (root). 
   // If not, it falls back to mock data handled by the backend.
   getMessages: (searchQuery?: string) => {
-    return api.get<{ items: InboxMessage[] }>('/api/inbox', { params: { searchQuery } });
+    return api.get<{ items: InboxMessage[]; connected: boolean }>('/api/inbox', { params: { searchQuery } });
   },
-  getSlackMessages: () => api.get<{ items: InboxMessage[] }>('/api/inbox'),
+  getSlackMessages: () => api.get<{ items: InboxMessage[]; connected: boolean }>('/api/inbox'),
 };
 
 export default api;

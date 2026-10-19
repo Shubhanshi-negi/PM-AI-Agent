@@ -19,19 +19,15 @@ export const SettingsPage = () => {
   });
 
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [profilePicture, setProfilePicture] = useState<string | null>(null)
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => localStorage.getItem('profilePicture'))
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Load profile picture on mount
-  useEffect(() => {
-    const savedProfilePicture = localStorage.getItem('profilePicture')
-    if (savedProfilePicture) setProfilePicture(savedProfilePicture)
-  }, [])
-  
   // Persist profile picture
   useEffect(() => {
     if (profilePicture) {
       localStorage.setItem('profilePicture', profilePicture)
+    } else {
+      localStorage.removeItem('profilePicture')
     }
   }, [profilePicture])
 
@@ -128,9 +124,10 @@ export const SettingsPage = () => {
             </div>
           </div>
 
-          {[['Email Notifications', emailNotifications, toggleEmail],
-            ['Push Notifications', pushNotifications, togglePush]].map(
-            ([label, value, action]: any) => (
+          {[
+            { label: 'Email Notifications', value: emailNotifications, action: toggleEmail },
+            { label: 'Push Notifications', value: pushNotifications, action: togglePush },
+          ].map(({ label, value, action }) => (
               <div key={label} className="flex justify-between py-2">
                 <span className="text-sm text-muted">{label}</span>
                 <button

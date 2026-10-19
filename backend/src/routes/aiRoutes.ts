@@ -1,9 +1,6 @@
 import express from 'express';
-import { type IProject } from '../models/Project.js';
-import { type ITask } from '../models/Task.js';
-import { analyzeProject, chatOverProject, extractTasksFromText, type AnalyzeInput } from '../services/ai/analyzeProject.js'; // Person C's logic
-import Project from '../models/Project.js'; // Mongoose model for fetching
-import Task from '../models/Task.js'; // Mongoose model for fetching
+import { readStore } from '../services/jsonStore.js';
+import { analyzeProject, chatOverProject, extractTasksFromText, type AnalyzeInput } from '../services/ai/analyzeProject.js';
 
 const router = express.Router();
 
@@ -12,32 +9,36 @@ router.post('/analyze/:projectId', async (req, res) => {
     const { projectId } = req.params;
 
     try {
-        // Fetch project and tasks from our main database
-        const projectData: IProject | null = await Project.findById(projectId);
+        const { projects, tasks } = await readStore();
+        const projectData = projects.find(project => project._id === projectId);
         if (!projectData) {
             return res.status(404).json({ message: 'Project not found' });
         }
 
-        const tasksData: ITask[] = await Task.find({ project: projectId });
+        const tasksData = tasks.filter(task => task.project === projectId);
 
-        // Transform our Mongoose objects into the expected interface for analyzeProject
+        // Transform stored records into the AI service input shape.
         const aiInput: AnalyzeInput = {
             project: {
-                id: projectData._id.toString(),
+                id: projectData._id,
                 name: projectData.name,
             },
             tasks: tasksData.map(t => ({
-                id: t._id.toString(),
+                id: t._id,
                 title: t.name,
-                status: t.status.toLowerCase().replace(' ', '_') as any, // e.g., "To Do" -> "to_do"
-                dueDate: t.dueDate ? t.dueDate.toISOString() : undefined,
+                status: t.status === 'To Do' ? 'todo' : t.status === 'In Progress' ? 'in_progress' : 'done',
+                dueDate: t.dueDate || undefined,
                 assignee: t.owner,
-                dependencies: t.dependsOn ? [t.dependsOn.toString()] : undefined,
+                dependencies: t.dependsOn ? [t.dependsOn] : undefined,
             })),
         };
 
         // Call Person C's AI logic
         const analysis = await analyzeProject(aiInput);
+        if ('error' in analysis) {
+            res.status(502).json({ message: analysis.error });
+            return;
+        }
         res.json(analysis);
 
     } catch (error: any) {
@@ -56,26 +57,27 @@ router.post('/chat/:projectId', async (req, res) => {
     }
 
     try {
-        const projectData: IProject | null = await Project.findById(projectId);
+        const { projects, tasks } = await readStore();
+        const projectData = projects.find(project => project._id === projectId);
         if (!projectData) {
             return res.status(404).json({ message: 'Project not found' });
         }
-        const tasksData: ITask[] = await Task.find({ project: projectId });
+        const tasksData = tasks.filter(task => task.project === projectId);
 
         // Call Person C's AI chat logic
         const answer = await chatOverProject(
             { 
-                id: projectData._id.toString(), 
+                id: projectData._id,
                 name: projectData.name,
                 context: projectData.context 
             },
             tasksData.map(t => ({
-                id: t._id.toString(),
+                id: t._id,
                 title: t.name,
-                status: t.status.toLowerCase().replace(' ', '_') as any,
-                dueDate: t.dueDate ? t.dueDate.toISOString() : undefined,
+                status: t.status === 'To Do' ? 'todo' : t.status === 'In Progress' ? 'in_progress' : 'done',
+                dueDate: t.dueDate || undefined,
                 assignee: t.owner,
-                dependencies: t.dependsOn ? [t.dependsOn.toString()] : undefined,
+                dependencies: t.dependsOn ? [t.dependsOn] : undefined,
             })),
             question
         );
@@ -98,6 +100,10 @@ router.post('/doc-to-tasks', async (req, res) => {
 
     try {
         const result = await extractTasksFromText(document);
+        if ('error' in result) {
+            res.status(502).json({ message: result.error });
+            return;
+        }
         res.json(result);
     } catch (error: any) {
         console.error("Doc-to-Tasks Route Error:", error);

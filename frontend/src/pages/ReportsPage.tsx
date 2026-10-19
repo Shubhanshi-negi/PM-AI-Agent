@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useProject } from '../context/ProjectContext'
 import { aiService, type AIInsights } from '../services/api'
 import { AlertTriangle, Lightbulb, RefreshCw } from 'lucide-react' // Ensure these are imported from lucide-react
@@ -8,7 +8,7 @@ export const ReportsPage = () => {
   const [insights, setInsights] = useState<AIInsights | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     if (!currentProject) {
       setInsights(null);
       return;
@@ -23,11 +23,11 @@ export const ReportsPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentProject])
 
   useEffect(() => {
-    fetchInsights()
-  }, [currentProject]) // Re-fetch when current project changes
+    void fetchInsights()
+  }, [fetchInsights])
 
   if (!currentProject) {
     return <div className="p-8 text-center text-muted italic">Select a project to view AI reports.</div>

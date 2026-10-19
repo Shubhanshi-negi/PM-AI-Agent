@@ -1,34 +1,17 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+export type TaskTeam = 'Marketing' | 'Development' | 'Design' | 'Product' | 'Operations';
+export type TaskStatus = 'To Do' | 'In Progress' | 'Done';
+export type TaskPriority = 'Low' | 'Medium' | 'High';
 
-export interface ITask extends Document {
-  project?: Types.ObjectId;
+export interface ITask {
+  _id: string;
+  project?: string;
   name: string;
   owner: string;
-  team: 'Marketing' | 'Development' | 'Design' | 'Product' | 'Operations';
-  status: 'To Do' | 'In Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate: Date;
+  team: TaskTeam;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: string;
   description?: string;
-  dependsOn?: Types.ObjectId | null;
-  createdAt: Date;
+  dependsOn?: string | null;
+  createdAt: string;
 }
-
-const TaskSchema: Schema = new Schema({
-  project: { type: Schema.Types.ObjectId, ref: 'Project' },
-  name: { type: String, required: true, trim: true },
-  owner: { type: String, required: true },
-  team: { 
-    type: String, 
-    enum: ['Marketing', 'Development', 'Design', 'Product', 'Operations'], 
-    default: 'Development' 
-  },
-  status: { type: String, enum: ['To Do', 'In Progress', 'Done'], default: 'To Do' },
-  priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
-  dueDate: { type: Date, required: true },
-  description: { type: String, trim: true },
-  dependsOn: { type: Schema.Types.ObjectId, ref: 'Task', default: null },
-  createdAt: { type: Date, default: Date.now }
-});
-
-const Task = mongoose.model<ITask>('Task', TaskSchema);
-export default Task;

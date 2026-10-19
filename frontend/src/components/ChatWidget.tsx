@@ -38,16 +38,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     setLoading(true);
 
     try {
-      // Use existing chatWithAI method with a race for timeout
-      const responsePromise = aiService.chatWithAI(projectId, userMsg.text);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Request timed out")), 30000)
-      );
-
-      const res: any = await Promise.race([responsePromise, timeoutPromise]);
-      
-      const aiText =
-        res.data?.answer ?? "Sorry, I could not generate a reply right now.";
+      const response = await aiService.chatWithAI(projectId, userMsg.text);
+      const aiText = response.data.answer;
       const aiMsg: Message = {
         id: crypto.randomUUID(),
         from: "ai",
@@ -59,7 +51,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       const aiMsg: Message = {
         id: crypto.randomUUID(),
         from: "ai",
-        text: "The AI is taking too long to respond. Please try again.",
+        text: "The AI is unavailable or took too long to respond. Please try again.",
       };
       setMessages((prev) => [...prev, aiMsg]);
     } finally {

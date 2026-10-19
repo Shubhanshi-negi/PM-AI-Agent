@@ -1,3 +1,27 @@
+/* Hide scrollbars for custom-scrollbar-hide containers but keep scrolling functional (Projects/Assets pages only) */
+.custom-scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+.custom-scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+/* Hide scrollbars for custom-scrollbar-hide containers but keep scrolling functional (already present, but ensure global) */
+.custom-scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+.custom-scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+/* Hide scrollbars for custom-scrollbar-hide containers but keep scrolling functional */
+.custom-scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+.custom-scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -40,4 +64,14 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Hide scrollbar while keeping scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

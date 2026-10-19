@@ -3,7 +3,7 @@
 An AI-powered project management assistant designed to streamline planning, task tracking, and team coordination. This agent summarizes status, predicts risks via ML, supports natural language commands, and integrates with Slack.
 
 ![Status](https://img.shields.io/badge/Status-Feature%20Complete-green)
-![Stack](https://img.shields.io/badge/Stack-MERN%20%2B%20LangChain-blue)
+![Stack](https://img.shields.io/badge/Stack-React%20%2B%20Express%20%2B%20JSON-blue)
 
 ## 📌 Project Context (Hackathon Challenge)
 
@@ -46,7 +46,7 @@ The application follows a modular full-stack architecture for scalability and cl
 graph TD
     User["User (Browser)"] -->|HTTP/JSON| Frontend["React + Vite Frontend"]
     Frontend -->|REST API| Backend["Node.js + Express Backend"]
-    Backend -->|Mongoose| DB[("MongoDB Atlas")]
+    Backend -->|Local JSON files| Store[(backend/data/store.json)]
     Backend -->|LangChain| AIService["AI Service Layer"]
     AIService -->|Primary| Groq["Groq Llama-3"]
     AIService -->|Fallback| OpenAI["OpenAI GPT-4o"]
@@ -63,8 +63,8 @@ We chose **LangChain.js** as the backbone of our AI service for three key reason
 ## 🛠️ Tech Stack
 
 *   **Frontend:** React (v19), Vite, TypeScript, Tailwind CSS, Recharts, Lucide Icons, @tailwindcss/typography.
-*   **Backend:** Node.js, Express, MongoDB (Mongoose).
-*   **AI Engine:** LangChain.js (Groq Llama-3-8b primary, OpenAI GPT-4o fallback).
+*   **Backend:** Node.js, Express, atomic local JSON storage.
+*   **AI Engine:** LangChain.js (Groq primary, OpenAI fallback).
 *   **Tools:** PDF-Parse, Multer, @slack/web-api.
 
 ---
@@ -85,18 +85,22 @@ npm install
 Create a `.env` file in the `backend` folder:
 ```env
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/pm_ai
-GROQ_API_KEY=your_groq_key
+GROQ_API_KEY=your_groq_key_optional
 OPENAI_API_KEY=your_openai_key_optional
+AI_MODEL=openai/gpt-oss-20b
+PM_AI_DATA_DIR=
 
 # Optional: Real Slack Integration
 SLACK_BOT_TOKEN=xoxb-your-token
 SLACK_INBOX_CHANNEL=C12345678
+SLACK_SIGNING_SECRET=your-signing-secret
 ```
+At least one AI provider key is required for AI analysis, task extraction, and chat. Copy `backend/.env.example` as a starting point. Projects and tasks are persisted in `backend/data/store.json`; uploaded files are kept in `backend/uploads/`. `PM_AI_DATA_DIR` can point to another local folder. The backend defaults to port `5000`, which matches the frontend API client; set `VITE_API_URL` in `frontend/.env` only when using a different backend origin. No database server or remote database account is used.
 Start the backend:
 ```bash
 npm start
 ```
+Run backend tests with `npm test`.
 
 ### 3. Frontend Setup
 ```bash

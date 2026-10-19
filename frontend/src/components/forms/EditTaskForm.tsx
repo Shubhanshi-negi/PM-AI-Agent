@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProject } from '../../context/ProjectContext';
-import { taskService, type Task } from '../../services/api';
+import { getApiErrorMessage, taskService, type Task, type TaskPriority, type TaskStatus, type TaskTeam } from '../../services/api';
 import { StatusBadge, PriorityBadge } from '../ui/BadgeComponents';
 
 interface EditTaskFormProps {
@@ -23,7 +23,7 @@ export const EditTaskForm = ({ task, onSuccess, onCancel }: EditTaskFormProps) =
     priority: task.priority,
     dueDate: task.dueDate.split('T')[0],
     description: task.description || '',
-    dependsOn: task.dependsOn?._id || ''
+    dependsOn: typeof task.dependsOn === 'string' ? task.dependsOn : task.dependsOn?._id || ''
   });
 
   // Fetch existing tasks for dependency dropdown
@@ -51,16 +51,16 @@ export const EditTaskForm = ({ task, onSuccess, onCancel }: EditTaskFormProps) =
     try {
       await taskService.update(task._id, {
         ...formData,
-        team: formData.team as any,
-        status: formData.status as 'To Do' | 'In Progress' | 'Done',
-        priority: formData.priority as 'Low' | 'Medium' | 'High',
-        dependsOn: formData.dependsOn || undefined
-      } as any);
+        team: formData.team as TaskTeam,
+        status: formData.status as TaskStatus,
+        priority: formData.priority as TaskPriority,
+        dependsOn: formData.dependsOn || null
+      });
       triggerTaskRefresh(); // Trigger task refresh across the app
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update task:', err);
-      setError(err.response?.data?.message || 'Failed to update task. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to update task. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ export const EditTaskForm = ({ task, onSuccess, onCancel }: EditTaskFormProps) =
           <select 
             className={inputClass}
             value={formData.team}
-            onChange={e => setFormData({...formData, team: e.target.value as any})}
+            onChange={e => setFormData({...formData, team: e.target.value as TaskTeam})}
           >
             <option value="Development" className={optionClass}>Development</option>
             <option value="Marketing" className={optionClass}>Marketing</option>
@@ -134,7 +134,7 @@ export const EditTaskForm = ({ task, onSuccess, onCancel }: EditTaskFormProps) =
             <select 
               className="bg-transparent text-sm text-white focus:outline-none cursor-pointer flex-1"
               value={formData.status}
-              onChange={e => setFormData({...formData, status: e.target.value as any})}
+              onChange={e => setFormData({...formData, status: e.target.value as TaskStatus})}
             >
               <option value="To Do" className={optionClass}>To Do</option>
               <option value="In Progress" className={optionClass}>In Progress</option>
@@ -152,7 +152,7 @@ export const EditTaskForm = ({ task, onSuccess, onCancel }: EditTaskFormProps) =
             <select 
               className="bg-transparent text-sm text-white focus:outline-none cursor-pointer flex-1"
               value={formData.priority}
-              onChange={e => setFormData({...formData, priority: e.target.value as any})}
+              onChange={e => setFormData({...formData, priority: e.target.value as TaskPriority})}
             >
               <option value="Low" className={optionClass}>Low</option>
               <option value="Medium" className={optionClass}>Medium</option>

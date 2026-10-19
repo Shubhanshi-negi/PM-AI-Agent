@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 /* eslint-disable react-refresh/only-export-components */
 import { projectService } from '../services/api';
 import type { Project } from '../services/api';
@@ -8,6 +8,8 @@ interface ProjectContextType {
   currentProject: Project | null;
   setCurrentProject: (project: Project | null) => void;
   addProject: (project: Project) => void;
+  deleteProject: (id: string) => Promise<void>;
+  updateProject: (id: string, data: Partial<Omit<Project, '_id' | 'createdAt'>>) => Promise<void>;
   loadingProjects: boolean;
   refreshProjects: () => Promise<void>;
   taskRefreshTrigger: number;
@@ -22,24 +24,48 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [taskRefreshTrigger, setTaskRefreshTrigger] = useState(0);
 
-  const refreshProjects = async () => {
+  const refreshProjects = useCallback(async () => {
     try {
       setLoadingProjects(true);
       const response = await projectService.getAll();
       setProjects(response.data);
-      
-      // If no project is currently selected, default to the first one
-      if (response.data.length > 0 && currentProject === null) {
-        setCurrentProject(response.data[0]);
-      } else if (response.data.length === 0) {
-        setCurrentProject(null);
-      }
+      setCurrentProject(current =>
+        response.data.find(project => project._id === current?._id) ?? response.data[0] ?? null
+      );
     } catch (error) {
       console.error('Failed to fetch projects:', error);
       setProjects([]);
       setCurrentProject(null);
     } finally {
       setLoadingProjects(false);
+    }
+  }, []);
+
+  const deleteProject = async (id: string) => {
+    // Optimistic UI update
+    setProjects(prev => prev.filter(p => p._id !== id));
+    try {
+      await projectService.remove(id);
+      // If deleted project was current, unset
+      if (currentProject && currentProject._id === id) {
+        setCurrentProject(null);
+      }
+    } catch (err) {
+      console.error('Failed to delete project', err);
+      // Re-fetch to restore state
+      await refreshProjects();
+    }
+  };
+
+  const updateProject = async (id: string, data: Partial<Omit<Project, '_id' | 'createdAt'>>) => {
+    try {
+      const res = await projectService.update(id, data);
+      const updated = res.data as Project;
+      setProjects(prev => prev.map(p => p._id === id ? updated : p));
+      if (currentProject && currentProject._id === id) setCurrentProject(updated);
+    } catch (err) {
+      console.error('Failed to update project', err);
+      await refreshProjects();
     }
   };
 
@@ -53,11 +79,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   useEffect(() => {
-    refreshProjects();
-  }, []);
+    void refreshProjects();
+  }, [refreshProjects]);
 
   return (
-    <ProjectContext.Provider value={{ projects, currentProject, setCurrentProject, addProject, loadingProjects, refreshProjects, taskRefreshTrigger, triggerTaskRefresh }}>
+    <ProjectContext.Provider value={{ projects, currentProject, setCurrentProject, addProject, deleteProject, updateProject, loadingProjects, refreshProjects, taskRefreshTrigger, triggerTaskRefresh }}>
       {children}
     </ProjectContext.Provider>
   );

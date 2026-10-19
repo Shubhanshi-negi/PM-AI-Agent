@@ -1,26 +1,20 @@
-// llm.ts - FIXED FALLBACK
 import { ChatGroq } from "@langchain/groq";
 import { ChatOpenAI } from "@langchain/openai";
 import "dotenv/config";
 
-let groqModel: any = null;
-try {
-  if (process.env.GROQ_API_KEY) {
-    groqModel = new ChatGroq({
+const groqModel = process.env.GROQ_API_KEY
+  ? new ChatGroq({
       apiKey: process.env.GROQ_API_KEY,
-      model: "llama-3.1-8b-instant",
+      model: process.env.AI_MODEL || "openai/gpt-oss-20b",
       temperature: 0.3,
-    });
-  }
-} catch (e) {
-  console.log("[LLM] Groq unavailable");
-}
+    })
+  : null;
 
 const hasOpenAI = !!process.env.OPENAI_API_KEY;
 const openAIModel = hasOpenAI
   ? new ChatOpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-4o-mini",
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       temperature: 0.3,
     })
   : null;
@@ -31,16 +25,16 @@ const openAIModel = hasOpenAI
 export async function callLLM(messages: any[]) {
   try {
     if (groqModel) return await groqModel.invoke(messages);
-  } catch (err: any) {
-    console.error("[LLM] Groq failed:", err.message);
+  } catch (err: unknown) {
+    console.error("[LLM] Groq failed:", err instanceof Error ? err.message : err);
   }
 
   if (openAIModel) {
     try {
       console.log("[LLM] OpenAI fallback");
       return await openAIModel.invoke(messages);
-    } catch (err: any) {
-      console.error("[LLM] OpenAI fallback failed:", err.message);
+    } catch (err: unknown) {
+      console.error("[LLM] OpenAI fallback failed:", err instanceof Error ? err.message : err);
       throw new Error("AI Temporarily Unavailable");
     }
   }
