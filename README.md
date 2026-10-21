@@ -129,14 +129,7 @@ npm run dev
 *   **Granular Activity Logging:** Comprehensive audit trails for project and task modifications.
 *   **Jira/Trello Integration:** Expand the "Smart Inbox" concept to include bi-directional sync with Jira boards.
 
----
 
-## 🤝 Team
-*   **Divya Adhikari:** Frontend UI/UX & React Components.
-*   **Shriyukt Gupta:** Backend API, Database Architecture & DevOps.
-*   **Shubhanshi Negi:** AI Logic, Prompt Engineering & LangChain Integration.
-
----
 
 ## 📜 License
 MIT
