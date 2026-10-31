@@ -73,7 +73,7 @@ We chose **LangChain.js** as the backbone of our AI service for three key reason
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/CyberShadowSensei/Project-Manager-AI-Agent.git
+git clone https://github.com/Shubhanshi-negi/PM-AI-Agent.git
 cd Project-Manager-AI-Agent
 ```
 
